@@ -15,11 +15,17 @@ end
 """
 add perturbation at random lattice site and let sytem relax until no further topplings
 """
-function perturb_and_relax(rng::AbstractRNG, hs::Array{Int64}, lattice::SimpleGraph{Int64}, hc::Int64, p_dis::Float64)
+function perturb_and_relax(rng::AbstractRNG, hs::Array{Int64}, lattice::SimpleGraph{Int64}, hc::Int64, p_dis::Float64;
+        start_site = missing
+    )
     topple_sites_over_time = Vector{Int}[]
 
     # select a random lattice site to perturb by adding extra grain
-    site = rand(rng, vertices(lattice))
+    if ismissing(start_site)
+        site = rand(rng, vertices(lattice))
+    else
+        site = start_site
+    end
     if add_and_check!(hs,hc,site)
         push!(topple_sites_over_time, [site])
     end

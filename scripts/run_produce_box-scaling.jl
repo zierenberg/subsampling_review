@@ -8,7 +8,7 @@ function main()
     for m in ms
         println("m=",m)
         data=produce_data_box_scaling_branching_network(m, h)
-        npzwrite(@sprintf("%s/data/data_box_scaling_m%06.4f_h%.2e.h5", path_project,m,h),data)
+        npzwrite(@sprintf("%s/data/data_box_scaling_m%06.4f_h%.2e.npz", path_project,m,h),data)
     end
 end
 

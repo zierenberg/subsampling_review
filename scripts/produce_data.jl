@@ -8,12 +8,145 @@ Pkg.activate(path_project)
 include("../src/asm.jl")
 include("../src/branching_network.jl")
 include("../src/utils.jl")
+include("../src/bivariate_gauss.jl")
 
 using Statistics
 using LinearAlgebra
 using RollingFunctions
 using Printf
 using StatsBase
+
+
+"""
+
+measure mean and variance of correlated but short timeseries
+"""
+function produce_data_sampling_bias_illustration(;
+        logTs = 0:0.2:5,
+        tau = 1e1,
+        trials::Int = Int(2e4),
+    )
+    rng = MersenneTwister(1000)
+
+    # correlation
+    rho = exp(-1/tau)
+
+    result = Dict{String, Any}()
+    result["T"] = zeros(length(logTs))
+    result["mean"] = zeros(trials, length(logTs))
+    result["var"]  = zeros(trials, length(logTs))
+    for (i, logT) in enumerate(logTs)
+        T = round(Int,10^logT)
+        result["T"][i] = T
+        println(T)
+        println("logT = ", log10(T), " ~ ", logT)
+        @showprogress 1 for j in 1:trials
+            data = bivariate_gauss(rng, rho, T)
+            result["mean"][j,i] = mean(data)
+            result["var"][j,i]  = var(data, mean=result["mean"][j,i])
+        end
+    end
+    return result
+end
+
+"""
+    produce_data_avalanches_sandpile_illustration()
+
+produce illustration of subsampling of 2D system as projection of activity to
+1D (y axis) as a function of time (x-axis)
+"""
+function produce_data_avalanches_sandpile_illustration(;
+        L::Int=Int(2^6), # linear extension of lattice
+        Ls=(L,L),   # 2D lattice
+        hc::Int=4,
+        p_dis::Float64=1e-4, # dissipation probability per toppling (probably system size dependent)
+        seed=1000,  # seed for random number generator
+        periodic=true
+    )
+    rng = MersenneTwister(seed)
+
+    lattice = LightGraphs.grid(Ls, periodic=periodic)
+    hs = rand(rng, 0:hc-1, Ls)
+
+    subsample = Dict{String, Any}("l" => Int[2^3])
+    subsample["random"] = [Vector{Int}(undef,l*l) for l in subsample["l"]]
+    subsample["window"] = [Vector{Int}(undef,l*l) for l in subsample["l"]]
+    # fill the subsampling schemes
+    for (i,l) in enumerate(subsample["l"])
+        subsample["random"][i] .= sample(rng, vertices(lattice), length(subsample["random"][i]), replace=false)
+        range =  floor(Int,L/2)-floor(Int,l/2)+1 : floor(Int,L/2)-floor(Int,l/2)+l
+        subsample["window"][i] .= vcat(LinearIndices(size(hs))[range,range]...)
+    end
+
+    num_valid_avalanches = 0
+    data = Dict()
+    data["mean_h"] = Float64[]
+
+    min_size_sub  = Int(10)
+    max_size_full = Int(1e6)
+    println("find a suitable avalanche")
+    center = LinearIndices(size(hs))[floor(Int, L/2),floor(Int, L/2)]
+    for num_tries in 1:Int(1e5)
+        # get list of lists of toppled sites (one list of toppled sites per time step)
+        topple_sites_over_time = perturb_and_relax(rng, hs, lattice, hc, p_dis, start_site=center)
+
+        println("size total = ", length(topple_sites_over_time))
+        if (length(topple_sites_over_time) > min_size_sub) && (length(topple_sites_over_time) < max_size_full)
+            # get avalanche sizes for subsamples
+            size_rand = 0
+            size_wind = 0
+            for sites in topple_sites_over_time
+                size_rand += sum(in.(sites, Ref(subsample["random"][1])))
+                size_wind += sum(in.(sites, Ref(subsample["window"][1])))
+            end
+            println("size rand = ", size_rand)
+            println("size wind = ", size_wind)
+            if (size_rand > min_size_sub) && (size_wind > min_size_sub)
+                #want 2D array of (toppled sites projected, time)
+                T = length(topple_sites_over_time)
+                result = Dict{String, Any}()
+                # subsamples
+                result["subsample/rand"] = subsample["random"][1]
+                result["subsample/wind"] = subsample["window"][1]
+                #log
+                result["states/full"] = zeros(Ls...,T)
+                #time
+                result["time/full"] = zeros((L,T))
+                result["time/rand"] = zeros((L,T))
+                result["time/wind"] = zeros((L,T))
+                #space
+                result["space/full"] = zeros(Ls)
+                result["space/rand"] = zeros(Ls)
+                result["space/wind"] = zeros(Ls)
+                #layer
+                result["layer/full"] = zeros(Ls)
+                result["layer/rand"] = zeros(Ls)
+                result["layer/wind"] = zeros(Ls)
+                result["layer/full"][result["subsample/rand"]] .= 1
+                result["layer/wind"][result["subsample/wind"]] .= 1
+                for (t,sites) in enumerate(topple_sites_over_time)
+                    sites_full = sites
+                    sites_rand = sites[in.(sites, Ref(subsample["random"][1]))]
+                    sites_wind = sites[in.(sites, Ref(subsample["window"][1]))]
+                    result["states/full"][CartesianIndices(Ls)[sites_full],t] .= 1
+                    result["space/full"][sites_full] .+= 1
+                    result["space/rand"][sites_rand] .+= 1
+                    result["space/wind"][sites_wind] .+= 1
+                    result["time/full"][:,t] .= projection_from_sites(sites_full, Ls)
+                    result["time/rand"][:,t] .= projection_from_sites(sites_rand, Ls)
+                    result["time/wind"][:,t] .= projection_from_sites(sites_wind, Ls)
+                end
+                return result
+            end
+        end
+    end
+end
+
+function projection_from_sites(active_sites, Ls)
+    state = zeros(Ls)
+    state[active_sites] .= 1
+    return vec(sum(state, dims=1))
+end
 
 """
     produce_data_avalanches_sandpile()

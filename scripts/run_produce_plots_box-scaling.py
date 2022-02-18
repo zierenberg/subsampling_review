@@ -62,7 +62,7 @@ def main():
     ms=[1.09, 1.10, 1.2]
     for i,m in enumerate(ms):
         try:
-            filename="/{}/data/data_box_scaling_m{:06.4f}_h{:.2e}.h5".format(base_path,m,h)
+            filename="/{}/data/data_box_scaling_m{:06.4f}_h{:.2e}.npz".format(base_path,m,h)
             f = np.load(filename,'r')
 
             #fig = plt.figure()
