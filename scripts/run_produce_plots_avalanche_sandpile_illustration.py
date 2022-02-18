@@ -25,7 +25,7 @@ matplotlib.rcParams["axes.spines.top"] = False
 # matplotlib.rcParams["axes.spines.bottom"] = False
 
 # avoid using `plt.subplots(figsize=(3.4, 2.7))` every time
-matplotlib.rcParams["figure.figsize"] = [6.8, 4.4]  # APS double column
+matplotlib.rcParams["figure.figsize"] = [9.0, 4.4]  # APS double column
 matplotlib.rcParams["figure.dpi"] = 300  # this primarily affects the size on screen
 
 import h5py
@@ -38,10 +38,11 @@ import os
 base_path = os.path.join(*os.path.normpath(__file__).split(os.path.sep)[:-2])
 
 def main():
-    fig, axs = plt.subplots(2,3)
+    fig, axs = plt.subplots(2,4)
     for ax in axs[0]:
         ax.set_ylabel(r"projected activity $a_y = \sum_x a_{xy}$")
         ax.set_xlabel(r"time")
+
 
     filename="/{}/data/data_avalanche_sandpile_illustration.npz".format(base_path)
     data = np.load(filename,'r')
@@ -51,13 +52,16 @@ def main():
     #cmap.set_under('white')
     cmap='Greys'
 
+    max_num = np.matrix(data["time/full"]).max()
+    print(max_num)
+
     ax = axs[0,0]
-    ax.set_title('full (64x64)')
-    ax.imshow(data["time/full"], vmin=0, vmax=4, cmap=cmap,  interpolation='nearest', aspect='auto')
+    ax.set_title('full (32x32)')
+    ax.imshow(data["time/full"], vmin=0, vmax=max_num, cmap=cmap,  interpolation='nearest', aspect='auto')
 
     ax = axs[0,1]
     ax.set_title('random(64)')
-    ax.imshow(data["time/rand"], vmin=0, vmax=4, cmap=cmap, interpolation='nearest', aspect='auto')
+    pos = ax.imshow(data["time/rand"], vmin=0, vmax=max_num, cmap=cmap, interpolation='nearest', aspect='auto')
 
     ax = axs[0,2]
     ax.set_title('window(8x8)')
@@ -65,10 +69,13 @@ def main():
     #sample_range[:] = 0
     #sample_range[24:40,:] = 0.1
     #ax.imshow(sample_range, cmap='Greys',  interpolation='nearest', aspect='auto', alpha=0.4)
-    ax.imshow(data["time/wind"], vmin=0, vmax=4, cmap=cmap,  interpolation='nearest', aspect='auto')
-    ax.axhline(27.5, color=_alpha_to_solid_on_bg('blue', 1.0), linewidth=1.0)
-    ax.axhline(35.5, color=_alpha_to_solid_on_bg('blue', 1.0), linewidth=1.0)
+    pos = ax.imshow(data["time/wind"], vmin=0, vmax=max_num, cmap=cmap,  interpolation='nearest', aspect='auto')
+    ax.axhline(11.5, color=_alpha_to_solid_on_bg('orange', 1.0), linewidth=1.0)
+    ax.axhline(19.5, color=_alpha_to_solid_on_bg('orange', 1.0), linewidth=1.0)
 
+
+    for ax in axs[0]:
+        ax.invert_yaxis()
 
     #######################
     #### spatial avalanches
@@ -88,13 +95,18 @@ def main():
         ax.set_ylabel(r'y')
         ax.set_xlabel(r'x')
 
-        rect = patches.Rectangle((27.5, 27.5), 8, 8, linewidth=1.0, edgecolor=_alpha_to_solid_on_bg('blue', 1.0), facecolor='none')
+        rect = patches.Rectangle((11.5, 11.5), 8, 8, linewidth=1.0, edgecolor=_alpha_to_solid_on_bg('orange', 1.0), facecolor='none')
         ax.add_patch(rect)
         for index in data["subsample/rand"]:
-            j = int((index-1)/64)
-            i = (index-1)%64
-            rect = patches.Rectangle((i-0.50, j-0.50), 1, 1, linewidth=0.25, edgecolor=_alpha_to_solid_on_bg('orange', 1.0), facecolor='none')
+            j = int((index-1)/32)
+            i = (index-1)%32
+            rect = patches.Rectangle((i-0.50, j-0.50), 1, 1, linewidth=0.25, edgecolor=_alpha_to_solid_on_bg('blue', 1.0), facecolor='none')
             ax.add_patch(rect)
+
+    for ax in axs[1,0:2]:
+        ax.invert_yaxis()
+
+    fig.colorbar(pos, ticks=[0,1,2,3], ax=axs[0,3])
 
     # has to be before set size
     fig.tight_layout()

@@ -56,7 +56,7 @@ produce illustration of subsampling of 2D system as projection of activity to
 1D (y axis) as a function of time (x-axis)
 """
 function produce_data_avalanches_sandpile_illustration(;
-        L::Int=Int(2^6), # linear extension of lattice
+        L::Int=Int(2^5), # linear extension of lattice
         Ls=(L,L),   # 2D lattice
         hc::Int=4,
         p_dis::Float64=1e-4, # dissipation probability per toppling (probably system size dependent)
@@ -83,7 +83,8 @@ function produce_data_avalanches_sandpile_illustration(;
     data["mean_h"] = Float64[]
 
     min_size_sub  = Int(10)
-    max_size_full = Int(1e6)
+    min_size_full = Int(30)
+    max_size_full = Int(1e3)
     println("find a suitable avalanche")
     center = LinearIndices(size(hs))[floor(Int, L/2),floor(Int, L/2)]
     for num_tries in 1:Int(1e5)
@@ -91,7 +92,7 @@ function produce_data_avalanches_sandpile_illustration(;
         topple_sites_over_time = perturb_and_relax(rng, hs, lattice, hc, p_dis, start_site=center)
 
         println("size total = ", length(topple_sites_over_time))
-        if (length(topple_sites_over_time) > min_size_sub) && (length(topple_sites_over_time) < max_size_full)
+        if (length(topple_sites_over_time) > min_size_full) && (length(topple_sites_over_time) < max_size_full)
             # get avalanche sizes for subsamples
             size_rand = 0
             size_wind = 0
