@@ -31,8 +31,9 @@ function produce_data_sampling_bias_illustration(;
     # correlation
     rho = exp(-1/tau)
 
+
     result = Dict{String, Any}()
-    result["T"] = zeros(length(logTs))
+    result["T"] = zeros(Int,length(logTs))
     result["mean"] = zeros(trials, length(logTs))
     result["var"]  = zeros(trials, length(logTs))
     for (i, logT) in enumerate(logTs)
@@ -46,6 +47,10 @@ function produce_data_sampling_bias_illustration(;
             result["var"][j,i]  = var(data, mean=result["mean"][j,i])
         end
     end
+
+    #example
+    println("example")
+    result["example"] = bivariate_gauss(rng, rho, 1000)
     return result
 end
 

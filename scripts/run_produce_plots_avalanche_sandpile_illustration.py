@@ -80,13 +80,13 @@ def main():
     #######################
     #### spatial avalanches
     ax = axs[1,0]
-    ax.imshow(data["space/full"].transpose(), vmin=0, vmax=4,cmap=cmap, interpolation='nearest', aspect='auto')
+    ax.imshow(data["space/full"].transpose(), vmin=0, vmax=max_num,cmap=cmap, interpolation='nearest', aspect='auto')
 
     ax = axs[1,1]
-    ax.imshow(data["space/rand"].transpose(), vmin=0, vmax=4,cmap=cmap, interpolation='nearest', aspect='auto')
+    ax.imshow(data["space/rand"].transpose(), vmin=0, vmax=max_num,cmap=cmap, interpolation='nearest', aspect='auto')
 
     ax = axs[1,2]
-    ax.imshow(data["space/wind"].transpose(), vmin=0, vmax=4,cmap=cmap, interpolation='nearest', aspect='auto')
+    ax.imshow(data["space/wind"].transpose(), vmin=0, vmax=max_num,cmap=cmap, interpolation='nearest', aspect='auto')
 
 
     layer_rand = data["layer/rand"]
@@ -100,8 +100,10 @@ def main():
         for index in data["subsample/rand"]:
             j = int((index-1)/32)
             i = (index-1)%32
-            rect = patches.Rectangle((i-0.50, j-0.50), 1, 1, linewidth=0.25, edgecolor=_alpha_to_solid_on_bg('blue', 1.0), facecolor='none')
-            ax.add_patch(rect)
+            #rect = patches.Rectangle((i-0.50, j-0.50), 1, 1, linewidth=0.25, edgecolor=_alpha_to_solid_on_bg('blue', 1.0), facecolor='none')
+            #ax.add_patch(rect)
+
+            ax.scatter(i,j, s=10, c='blue', marker='x')
 
     for ax in axs[1,0:2]:
         ax.invert_yaxis()

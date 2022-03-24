@@ -38,12 +38,12 @@ import os
 base_path = os.path.join(*os.path.normpath(__file__).split(os.path.sep)[:-2])
 
 def main():
-    fig, axs = plt.subplots(1,2)
+    fig, axs = plt.subplots(1,3)
 
     filename="/{}/data/data_sampling_bias_illustration.npz".format(base_path)
     data = np.load(filename,'r')
 
-    for ax in axs:
+    for ax in axs[0:2]:
         ax.set_xscale("log")
         ax.set_xlabel(r"number of correlated samples $n$")
 
@@ -66,6 +66,12 @@ def main():
     ax.plot(data["T"], var_50, color='firebrick')
     ax.fill_between(data["T"], var_10, var_90, color='firebrick', alpha=0.3, lw=0)
     ax.axhline(1, color='black', linestyle='--')
+
+    #var
+    ax=axs[2]
+    ax.set_ylabel(r"x")
+    ax.set_xlabel(r"i")
+    ax.plot(data["example"][:300], color='slategrey')
 
     # has to be before set size
     fig.tight_layout()
