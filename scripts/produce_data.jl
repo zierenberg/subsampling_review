@@ -31,7 +31,6 @@ function produce_data_sampling_bias_illustration(;
     # correlation
     rho = exp(-1/tau)
 
-
     result = Dict{String, Any}()
     result["T"] = zeros(Int,length(logTs))
     result["mean"] = zeros(trials, length(logTs))
@@ -51,6 +50,40 @@ function produce_data_sampling_bias_illustration(;
     #example
     println("example")
     result["example"] = bivariate_gauss(rng, rho, 1000)
+    return result
+end
+
+"""
+
+measure mean and variance of random subsamples from correlated timeseries
+"""
+function produce_data_random_sampling_bias_illustration(;
+        logTs = 0:0.2:5,
+        tau = 1e1,
+        trials::Int = Int(2e4),
+    )
+    rng = MersenneTwister(1000)
+
+    # correlation
+    rho = exp(-1/tau)
+
+    result = Dict{String, Any}()
+    result["T"] = zeros(Int,length(logTs))
+    for (i, logT) in enumerate(logTs)
+        result["T"][i] = round(Int,10^logT)
+    end
+    T_max = result["T"][end]
+    result["mean"] = zeros(trials, length(logTs))
+    result["var"]  = zeros(trials, length(logTs))
+    @showprogress 1 for j in 1:trials
+        data = bivariate_gauss(rng, rho, T_max)
+        for (i, logT) in enumerate(logTs)
+            T = result["T"][i]
+            data_sub = shuffle(rng, data)[1:T]
+            result["mean"][j,i] = mean(data_sub)
+            result["var"][j,i]  = var(data_sub, mean=result["mean"][j,i])
+        end
+    end
     return result
 end
 
