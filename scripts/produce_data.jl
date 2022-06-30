@@ -24,7 +24,7 @@ measure mean and variance of correlated but short timeseries
 function produce_data_sampling_bias_illustration(;
         logTs = 0:0.2:5,
         tau = 1e1,
-        trials::Int = Int(2e4),
+        trials::Int = Int(1e4),
     )
     rng = MersenneTwister(1000)
 
