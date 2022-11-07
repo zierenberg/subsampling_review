@@ -3,7 +3,7 @@ Code that accompanies our Review on methodological advances to make use of subsa
 
 The simulation code is using the Julia Language and reproducibility is inspired
 by [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/).
-The plotting code is using the Python.
+The plotting code is in Python.
 
 
 To (locally) reproduce this project, do the following:
