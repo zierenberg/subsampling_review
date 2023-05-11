@@ -59,7 +59,7 @@ def main():
     #var
     ax=axs[0]
     ax.set_ylabel(r"x")
-    ax.set_xlabel(r"time step, i")
+    ax.set_xlabel(r"step, i")
     ax.plot(data["example"][500:900], color='slategrey')
 
     color_mean="#008F00"
